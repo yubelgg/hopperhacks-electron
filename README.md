@@ -78,8 +78,7 @@ Our mission is not to summarize literature, but to empower readers to explore it
 Clone the repository:
 
 ```bash
-git clone https://github.com/your-repo/understory.git
-cd understory
+git clone https://github.com/yubelgg/hopperhacks-electron.git
 ```
 
 Install dependencies:
