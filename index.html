@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LitHelper</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #0f0f1a;
+        color: #e0e0f0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        gap: 14px;
+      }
+
+      h1 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #c0c0e8;
+        letter-spacing: 0.02em;
+      }
+
+      .subtitle {
+        font-size: 12px;
+        color: #555570;
+        margin-top: 2px;
+      }
+
+      label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #6060a0;
+        margin-bottom: 6px;
+        display: block;
+      }
+
+      textarea {
+        width: 100%;
+        flex: 1;
+        background: #16162a;
+        border: 1px solid #2a2a4a;
+        border-radius: 8px;
+        color: #d0d0f0;
+        font-size: 13px;
+        line-height: 1.6;
+        padding: 12px 14px;
+        resize: none;
+        outline: none;
+        font-family: inherit;
+        transition: border-color 0.15s;
+      }
+      textarea:focus {
+        border-color: #4040a0;
+      }
+      textarea::placeholder {
+        color: #35355a;
+      }
+
+      .section {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .section.selection-section {
+        flex: 0 0 160px;
+      }
+
+      .section.explanation-section {
+        flex: 1;
+      }
+
+      .explanation-box {
+        flex: 1;
+        background: #16162a;
+        border: 1px solid #2a2a4a;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 13px;
+        line-height: 1.6;
+        color: #d0d0f0;
+        overflow-y: auto;
+        min-height: 0;
+      }
+      .explanation-box::-webkit-scrollbar {
+        width: 4px;
+      }
+      .explanation-box::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .explanation-box::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 2px;
+      }
+
+      .placeholder-text {
+        color: #35355a;
+        font-style: italic;
+      }
+
+      .spinner {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        color: #5050a0;
+        font-size: 12px;
+        font-style: italic;
+        margin-bottom: 6px;
+      }
+      .spinner.visible {
+        display: flex;
+      }
+      .spinner svg {
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error-text {
+        color: #f08080;
+        font-size: 12px;
+      }
+
+      .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #3a3a6a;
+        display: inline-block;
+        margin-right: 6px;
+        transition: background 0.3s;
+      }
+      .status-dot.active {
+        background: #6060cc;
+        box-shadow: 0 0 6px #6060cc88;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1><span class="status-dot" id="dot"></span>LitHelper</h1>
+      <p class="subtitle">Highlight any text to explain it</p>
+    </div>
+
+    <div class="section selection-section">
+      <label>Selected Text</label>
+      <textarea
+        id="selectionBox"
+        placeholder="Highlight text anywhere on your screen…"
+        readonly
+      ></textarea>
+    </div>
+
+    <div class="section explanation-section">
+      <label>Explanation</label>
+      <div class="spinner" id="spinner">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="#3030a0"
+            stroke-width="3"
+            opacity="0.3"
+          />
+          <path
+            d="M12 2a10 10 0 0 1 10 10"
+            stroke="#7070cc"
+            stroke-width="3"
+            stroke-linecap="round"
+          />
+        </svg>
+        Asking Gemini…
+      </div>
+      <div class="explanation-box" id="explanationBox">
+        <span class="placeholder-text" id="placeholder"
+          >Explanation will appear here.</span
+        >
+      </div>
+    </div>
+
+    <script>
+      const selectionBox = document.getElementById("selectionBox");
+      const explanationBox = document.getElementById("explanationBox");
+      const placeholder = document.getElementById("placeholder");
+      const spinner = document.getElementById("spinner");
+      const dot = document.getElementById("dot");
+
+      window.main.onSelection((text) => {
+        selectionBox.value = text;
+        dot.classList.add("active");
+      });
+
+      window.main.onLoading(() => {
+        spinner.classList.add("visible");
+        placeholder.style.display = "none";
+        explanationBox.childNodes.forEach((n) => {
+          if (n !== placeholder) n.remove?.();
+        });
+      });
+
+      window.main.onExplanation((text) => {
+        spinner.classList.remove("visible");
+        placeholder.style.display = "none";
+
+        // Clear previous explanation text nodes
+        [...explanationBox.childNodes].forEach((n) => {
+          if (n !== placeholder) n.remove?.();
+        });
+
+        const p = document.createElement("span");
+        p.textContent = text;
+        explanationBox.appendChild(p);
+        dot.classList.remove("active");
+      });
+
+      window.main.onError((msg) => {
+        spinner.classList.remove("visible");
+        placeholder.style.display = "none";
+
+        [...explanationBox.childNodes].forEach((n) => {
+          if (n !== placeholder) n.remove?.();
+        });
+
+        const e = document.createElement("span");
+        e.className = "error-text";
+        e.textContent = msg;
+        explanationBox.appendChild(e);
+        dot.classList.remove("active");
+      });
+    </script>
+  </body>
+</html>

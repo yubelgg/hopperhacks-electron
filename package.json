@@ -1,0 +1,19 @@
+{
+  "name": "hopelectron",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "ELECTRON_OZONE_PLATFORM_HINT=x11 electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/genai": "^1.42.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "electron": "^40.6.0"
+  }
+}
