@@ -1,11 +1,9 @@
 const path = require("path");
 const { app, BrowserWindow, clipboard, screen, ipcMain } = require("electron");
 const { GoogleGenAI } = require("@google/genai");
-const { ElevenLabsClient } = require("@elevenlabs/elevenlabs-js");
 require("dotenv").config();
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
 
 let mainWindow = null;
 let popupWindow = null;
@@ -263,6 +261,8 @@ ipcMain.on("open-app", () => {
 });
 
 ipcMain.handle("speak-text", async (_event, text) => {
+  const { ElevenLabsClient } = await import("@elevenlabs/elevenlabs-js");
+  const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
   const stream = await elevenlabs.textToSpeech.convert(
     "JBFqnCBsd6RMkjVDRZzb",
     { text, modelId: "eleven_multilingual_v2", outputFormat: "mp3_44100_128" }
