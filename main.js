@@ -50,6 +50,13 @@ Return ONLY valid JSON in this shape:
       "explanation": "one short sentence about how it appears in this passage",
       "evidence": "short quoted phrase from the passage"
     }
+  ],
+  "characters": [
+    {
+      "name": "character name",
+      "role": "one sentence about their role in this passage",
+      "relationship": "one sentence about how they relate to other characters"
+    }
   ]
 }
 Rules:
@@ -61,6 +68,9 @@ Rules:
 - return 3 to 5 devices
 - each device needs a specific explanation grounded in this passage
 - keep evidence very short (about 3-8 words)
+- characters should be characters mentioned or implied in this passage
+- return 2 to 5 characters
+- each character needs a role and relationship grounded in this passage
 
 Book: ${bookTitle || "Unknown"}
 Passage:
@@ -117,7 +127,30 @@ Passage:
         .slice(0, 6)
     : [];
 
-  return { explanation, themes, devices };
+  const characters = Array.isArray(parsed.characters)
+    ? parsed.characters
+        .map((item) => {
+          if (typeof item === "string") {
+            const name = item.trim();
+            if (!name) return null;
+            return { name, role: "", relationship: "" };
+          }
+          if (!item || typeof item !== "object") return null;
+          const name = typeof item.name === "string" ? item.name.trim() : "";
+          const role =
+            typeof item.role === "string" ? item.role.trim() : "";
+          const relationship =
+            typeof item.relationship === "string"
+              ? item.relationship.trim()
+              : "";
+          if (!name) return null;
+          return { name, role, relationship };
+        })
+        .filter(Boolean)
+        .slice(0, 5)
+    : [];
+
+  return { explanation, themes, devices, characters };
 }
 
 function createMainWindow() {
@@ -193,6 +226,7 @@ async function triggerExplain(text) {
         mainWindow.webContents.send("explanation", analysis.explanation);
         mainWindow.webContents.send("themes", analysis.themes);
         mainWindow.webContents.send("devices", analysis.devices);
+        mainWindow.webContents.send("characters", analysis.characters);
       }
     } catch (err) {
       if (!popupWindow.isDestroyed())
@@ -227,6 +261,7 @@ ipcMain.handle("analyze-passage", async (_event, payload) => {
       text: analysis.explanation,
       themes: analysis.themes,
       devices: analysis.devices,
+      characters: analysis.characters,
     };
   } catch (err) {
     return { ok: false, error: "Error: " + err.message };

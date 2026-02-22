@@ -380,6 +380,50 @@
         font-style: italic;
       }
 
+      .character-box {
+        min-height: 175px;
+        max-height: 240px;
+        background: #252b25;
+        border: 1px solid #495648;
+        border-radius: 8px;
+        padding: 12px;
+        overflow-y: auto;
+      }
+
+      .character-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .character-card {
+        border: 1px solid #4c5e7a;
+        border-radius: 10px;
+        background: linear-gradient(140deg, #272f3d, #212833);
+        padding: 9px 10px;
+      }
+
+      .character-name {
+        font-size: 12px;
+        font-weight: 700;
+        color: #dce4f6;
+        letter-spacing: 0.02em;
+      }
+
+      .character-role {
+        margin-top: 4px;
+        font-size: 12px;
+        line-height: 1.35;
+        color: #c9d4e9;
+      }
+
+      .character-relationship {
+        margin-top: 5px;
+        font-size: 11px;
+        color: #9fb4d4;
+        font-style: italic;
+      }
+
       .explanation-box::-webkit-scrollbar {
         width: 4px;
       }
@@ -560,6 +604,13 @@
             </div>
           </div>
 
+          <div class="panel section characters-panel" id="charactersPanel">
+            <h3 class="section-header">character analysis</h3>
+            <div class="character-box" id="characterBox">
+              <div class="character-list" id="characterList"></div>
+            </div>
+          </div>
+
           <div>
             <h3 class="section-header">themes</h3>
             <div class="theme-bubbles" id="themeBubbles"></div>
@@ -579,6 +630,7 @@
       const explanationBox = document.getElementById("explanationBox");
       const themeBubbles = document.getElementById("themeBubbles");
       const deviceBubbles = document.getElementById("deviceBubbles");
+      const characterList = document.getElementById("characterList");
       const loadingScreen = document.getElementById("loadingScreen");
       const analysisContent = document.getElementById("analysisContent");
       const dot = document.getElementById("dot");
@@ -718,10 +770,65 @@
         });
       }
 
+      function renderCharacters(characters) {
+        [...characterList.childNodes].forEach((node) => node.remove?.());
+        if (!Array.isArray(characters) || characters.length === 0) {
+          const placeholderChip = document.createElement("span");
+          placeholderChip.className = "placeholder-text";
+          placeholderChip.textContent = "No characters detected.";
+          characterList.appendChild(placeholderChip);
+          return;
+        }
+
+        characters.forEach((char, i) => {
+          if (typeof char === "string") {
+            const fallbackCard = document.createElement("div");
+            fallbackCard.className = "character-card fade-in";
+            fallbackCard.style.animationDelay = `${i * 0.1}s`;
+            const fallbackName = document.createElement("div");
+            fallbackName.className = "character-name";
+            fallbackName.textContent = char;
+            fallbackCard.appendChild(fallbackName);
+            characterList.appendChild(fallbackCard);
+            return;
+          }
+
+          if (!char || typeof char !== "object") return;
+          const name = typeof char.name === "string" ? char.name.trim() : "";
+          if (!name) return;
+
+          const card = document.createElement("div");
+          card.className = "character-card fade-in";
+          card.style.animationDelay = `${i * 0.1}s`;
+
+          const nameEl = document.createElement("div");
+          nameEl.className = "character-name";
+          nameEl.textContent = name;
+          card.appendChild(nameEl);
+
+          if (typeof char.role === "string" && char.role.trim()) {
+            const roleEl = document.createElement("div");
+            roleEl.className = "character-role";
+            roleEl.textContent = char.role.trim();
+            card.appendChild(roleEl);
+          }
+
+          if (typeof char.relationship === "string" && char.relationship.trim()) {
+            const relEl = document.createElement("div");
+            relEl.className = "character-relationship";
+            relEl.textContent = char.relationship.trim();
+            card.appendChild(relEl);
+          }
+
+          characterList.appendChild(card);
+        });
+      }
+
       function renderError(msg) {
         clearExplanationNodes();
         renderThemes([]);
         renderDevices([]);
+        renderCharacters([]);
 
         const error = document.createElement("span");
         error.className = "error-text";
@@ -749,6 +856,7 @@
             renderExplanation(result.text);
             renderThemes(result.themes || []);
             renderDevices(result.devices || []);
+            renderCharacters(result.characters || []);
             return;
           }
           renderError(result?.error || "Unable to analyze passage.");
@@ -777,6 +885,10 @@
 
       window.main.onDevices((devices) => {
         renderDevices(devices);
+      });
+
+      window.main.onCharacters((characters) => {
+        renderCharacters(characters);
       });
 
       window.main.onError((msg) => {
