@@ -1,4 +1,7 @@
 const path = require("path");
+const fs = require("fs");
+const os = require("os");
+const { spawn } = require("child_process");
 const { app, BrowserWindow, clipboard, screen, ipcMain } = require("electron");
 const { GoogleGenAI } = require("@google/genai");
 require("dotenv").config();
@@ -261,13 +264,25 @@ ipcMain.on("open-app", () => {
 });
 
 ipcMain.handle("speak-text", async (_event, text) => {
-  const { ElevenLabsClient, play } = await import("@elevenlabs/elevenlabs-js");
+  const { ElevenLabsClient } = await import("@elevenlabs/elevenlabs-js");
   const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
   const stream = await elevenlabs.textToSpeech.convert(
     "JBFqnCBsd6RMkjVDRZzb",
     { text, modelId: "eleven_multilingual_v2", outputFormat: "mp3_44100_128" }
   );
-  await play(stream);
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  const tmpFile = path.join(os.tmpdir(), "understory-tts.mp3");
+  fs.writeFileSync(tmpFile, Buffer.concat(chunks));
+
+  const cmd = process.platform === "darwin" ? "afplay" : "mpg123";
+  const args = process.platform === "darwin" ? [tmpFile] : ["-q", tmpFile];
+  await new Promise((resolve, reject) => {
+    const proc = spawn(cmd, args);
+    proc.on("close", resolve);
+    proc.on("error", reject);
+  });
+  try { fs.unlinkSync(tmpFile); } catch {}
 });
 
 ipcMain.handle("analyze-passage", async (_event, payload) => {
