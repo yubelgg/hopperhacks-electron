@@ -169,12 +169,14 @@ async function triggerExplain(text) {
       mainWindow.webContents.send("loading");
 
     try {
-      const prompt = `Explain this passage in 2-3 plain, clear sentences:\n\n"${text}"`;
-      const explanation = await generateExplanation(prompt);
+      const analysis = await generateSessionAnalysis("", text);
       if (!popupWindow.isDestroyed())
-        popupWindow.webContents.send("explanation", explanation);
-      if (mainWindow && !mainWindow.isDestroyed())
-        mainWindow.webContents.send("explanation", explanation);
+        popupWindow.webContents.send("explanation", analysis.explanation);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send("explanation", analysis.explanation);
+        mainWindow.webContents.send("themes", analysis.themes);
+        mainWindow.webContents.send("devices", analysis.devices);
+      }
     } catch (err) {
       if (!popupWindow.isDestroyed())
         popupWindow.webContents.send("error", "Error: " + err.message);

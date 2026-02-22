@@ -687,6 +687,14 @@
         renderExplanation(text);
       });
 
+      window.main.onThemes((themes) => {
+        renderThemes(themes);
+      });
+
+      window.main.onDevices((devices) => {
+        renderDevices(devices);
+      });
+
       window.main.onError((msg) => {
         renderError(msg);
       });
