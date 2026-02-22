@@ -45,7 +45,6 @@ We designed distinct analytical components for:
 
 * Character analysis
 * Theme modeling
-* Emotional tone detection
 * Literary device recognition
 
 For multimodal accessibility, we integrated **ElevenLabs** to convert explanations into expressive, natural-sounding audio directly within the pop-up interface.
