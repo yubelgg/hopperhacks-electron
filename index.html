@@ -657,17 +657,18 @@
         renderThemeLoading();
         renderDeviceLoading();
 
-        const result = await window.main.analyzePassage({
-          bookTitle,
-          passage,
-        });
-        if (result?.ok) {
-          renderExplanation(result.text);
-          renderThemes(result.themes || []);
-          renderDevices(result.devices || []);
-          return;
+        try {
+          const result = await window.main.analyzePassage({ bookTitle, passage });
+          if (result?.ok) {
+            renderExplanation(result.text);
+            renderThemes(result.themes || []);
+            renderDevices(result.devices || []);
+            return;
+          }
+          renderError(result?.error || "Unable to analyze passage.");
+        } catch (err) {
+          renderError("An unexpected error occurred: " + err.message);
         }
-        renderError(result?.error || "Unable to analyze passage.");
       });
 
       window.main.onSelection((text) => {
