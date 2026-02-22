@@ -9,6 +9,7 @@ let mainWindow = null;
 let popupWindow = null;
 let lastSelection = "";
 let debounceTimer = null;
+let replacingPopup = false;
 
 async function generateExplanation(prompt) {
   const response = await ai.models.generateContent({
@@ -79,7 +80,7 @@ Passage:
   const raw = await generateExplanation(prompt);
   const parsed = parseJsonObject(raw);
   if (!parsed || typeof parsed !== "object") {
-    return { explanation: raw, themes: [], devices: [] };
+    return { explanation: raw, themes: [], devices: [], characters: [] };
   }
 
   const explanation =
@@ -193,7 +194,10 @@ async function triggerExplain(text) {
   if (px + W > dx + dw) px = cursor.x - W - 10;
   if (py + H > dy + dh) py = cursor.y - H - 10;
 
-  if (popupWindow && !popupWindow.isDestroyed()) popupWindow.close();
+  if (popupWindow && !popupWindow.isDestroyed()) {
+    replacingPopup = true;
+    popupWindow.close();
+  }
 
   popupWindow = new BrowserWindow({
     width: W,
@@ -204,6 +208,8 @@ async function triggerExplain(text) {
     alwaysOnTop: true,
     resizable: false,
     skipTaskbar: true,
+    focusable: false,
+    ...(process.platform === "darwin" ? { type: "panel" } : {}),
     webPreferences: {
       preload: path.join(__dirname, "popup-preload.js"),
       contextIsolation: true,
@@ -211,6 +217,15 @@ async function triggerExplain(text) {
   });
 
   popupWindow.loadFile("popup.html");
+
+  popupWindow.on("closed", () => {
+    if (replacingPopup) {
+      replacingPopup = false;
+    } else {
+      lastSelection = "";
+      clearTimeout(debounceTimer);
+    }
+  });
 
   popupWindow.webContents.once("did-finish-load", async () => {
     const snippet = text.length > 120 ? text.slice(0, 120) + "\u2026" : text;
