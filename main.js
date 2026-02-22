@@ -69,7 +69,7 @@ Rules:
 - each theme description should be 1 concise sentence
 - return 4 to 7 themes
 - devices should be literary devices present in this passage
-- return 3 to 5 devices
+- return 2 to 3 devices
 - each device needs a specific explanation grounded in this passage
 - keep evidence very short (about 3-8 words)
 - characters should be characters mentioned or implied in this passage
@@ -126,7 +126,7 @@ Passage:
           return { name, explanation, evidence };
         })
         .filter(Boolean)
-        .slice(0, 6)
+        .slice(0, 3)
     : [];
 
   const characters = Array.isArray(parsed.characters)
@@ -156,8 +156,8 @@ Passage:
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
-    width: 480,
-    height: 600,
+    width: 960,
+    height: 850,
     title: "Understory",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -175,6 +175,14 @@ function createMainWindow() {
       event.preventDefault();
     }
   });
+
+  // macOS: hide the main window when it loses focus so it won't pop
+  // back up when the user interacts with the popup overlay.
+  if (process.platform === "darwin") {
+    mainWindow.on("blur", () => {
+      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.hide();
+    });
+  }
 
   mainWindow.on("closed", () => {
     mainWindow = null;
@@ -209,6 +217,7 @@ async function triggerExplain(text) {
     resizable: false,
     skipTaskbar: true,
     focusable: false,
+    show: false,
     ...(process.platform === "darwin" ? { type: "panel" } : {}),
     webPreferences: {
       preload: path.join(__dirname, "popup-preload.js"),
@@ -217,6 +226,9 @@ async function triggerExplain(text) {
   });
 
   popupWindow.loadFile("popup.html");
+  popupWindow.once("ready-to-show", () => {
+    popupWindow.showInactive();
+  });
 
   popupWindow.on("closed", () => {
     if (replacingPopup) {
@@ -263,26 +275,56 @@ ipcMain.on("open-app", () => {
   if (popupWindow && !popupWindow.isDestroyed()) popupWindow.close();
 });
 
-ipcMain.handle("speak-text", async (_event, text) => {
-  const { ElevenLabsClient } = await import("@elevenlabs/elevenlabs-js");
-  const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
-  const stream = await elevenlabs.textToSpeech.convert(
-    "JBFqnCBsd6RMkjVDRZzb",
-    { text, modelId: "eleven_multilingual_v2", outputFormat: "mp3_44100_128" }
-  );
-  const chunks = [];
-  for await (const chunk of stream) chunks.push(chunk);
-  const tmpFile = path.join(os.tmpdir(), "understory-tts.mp3");
-  fs.writeFileSync(tmpFile, Buffer.concat(chunks));
+let ttsProc = null;
 
-  const cmd = process.platform === "darwin" ? "afplay" : "mpg123";
-  const args = process.platform === "darwin" ? [tmpFile] : ["-q", tmpFile];
-  await new Promise((resolve, reject) => {
-    const proc = spawn(cmd, args);
-    proc.on("close", resolve);
-    proc.on("error", reject);
-  });
-  try { fs.unlinkSync(tmpFile); } catch {}
+ipcMain.handle("speak-text", async (_event, text) => {
+  try {
+    const voiceId = "JBFqnCBsd6RMkjVDRZzb";
+    const resp = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      {
+        method: "POST",
+        headers: {
+          "xi-api-key": process.env.ELEVENLABS_API_KEY,
+          "Content-Type": "application/json",
+          Accept: "audio/mpeg",
+        },
+        body: JSON.stringify({
+          text,
+          model_id: "eleven_multilingual_v2",
+          output_format: "mp3_44100_128",
+        }),
+      }
+    );
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => "");
+      return { ok: false, error: `ElevenLabs API ${resp.status}: ${body}` };
+    }
+    const buf = Buffer.from(await resp.arrayBuffer());
+    if (buf.length === 0) return { ok: false, error: "TTS returned no audio data." };
+
+    const tmpFile = path.join(os.tmpdir(), "understory-tts.mp3");
+    fs.writeFileSync(tmpFile, buf);
+
+    const cmd = process.platform === "darwin" ? "afplay" : "mpg123";
+    const args = process.platform === "darwin" ? [tmpFile] : ["-q", tmpFile];
+    await new Promise((resolve, reject) => {
+      ttsProc = spawn(cmd, args);
+      ttsProc.on("close", (code) => { ttsProc = null; resolve(code); });
+      ttsProc.on("error", (err) => { ttsProc = null; reject(err); });
+    });
+    try { fs.unlinkSync(tmpFile); } catch {}
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.on("stop-speaking", () => {
+  if (ttsProc) {
+    ttsProc.kill();
+    ttsProc = null;
+  }
 });
 
 ipcMain.handle("analyze-passage", async (_event, payload) => {
@@ -326,6 +368,15 @@ app.whenReady().then(() => {
       }
     }, 300);
   }, 500);
+});
+
+app.on("activate", () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    mainWindow.focus();
+  } else {
+    createMainWindow();
+  }
 });
 
 app.on("window-all-closed", () => {
