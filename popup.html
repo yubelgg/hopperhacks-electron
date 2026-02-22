@@ -198,35 +198,16 @@
         window.popup.close();
       });
 
-      let currentAudio = null;
-
-      function stopAudio() {
-        if (currentAudio) {
-          currentAudio.pause();
-          currentAudio = null;
-        }
-        speakBtn.classList.remove("speaking");
-        speakBtn.disabled = false;
-      }
-
       speakBtn.addEventListener("click", async () => {
-        if (currentAudio) {
-          stopAudio();
-          return;
-        }
         const text = explanationEl.textContent;
         if (!text) return;
+        speakBtn.classList.add("speaking");
         speakBtn.disabled = true;
         try {
-          const base64 = await window.popup.speak(text);
-          currentAudio = new Audio("data:audio/mp3;base64," + base64);
-          currentAudio.onended = stopAudio;
-          currentAudio.onerror = stopAudio;
-          speakBtn.classList.add("speaking");
+          await window.popup.speak(text);
+        } finally {
+          speakBtn.classList.remove("speaking");
           speakBtn.disabled = false;
-          currentAudio.play();
-        } catch {
-          stopAudio();
         }
       });
 

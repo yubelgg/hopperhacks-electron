@@ -261,15 +261,13 @@ ipcMain.on("open-app", () => {
 });
 
 ipcMain.handle("speak-text", async (_event, text) => {
-  const { ElevenLabsClient } = await import("@elevenlabs/elevenlabs-js");
+  const { ElevenLabsClient, play } = await import("@elevenlabs/elevenlabs-js");
   const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
   const stream = await elevenlabs.textToSpeech.convert(
     "JBFqnCBsd6RMkjVDRZzb",
     { text, modelId: "eleven_multilingual_v2", outputFormat: "mp3_44100_128" }
   );
-  const chunks = [];
-  for await (const chunk of stream) chunks.push(chunk);
-  return Buffer.concat(chunks).toString("base64");
+  await play(stream);
 });
 
 ipcMain.handle("analyze-passage", async (_event, payload) => {
