@@ -657,19 +657,35 @@
         renderThemeLoading();
         renderDeviceLoading();
 
-        const result = await window.main.analyzePassage({
-          bookTitle,
-          passage,
-        });
-        if (result?.ok) {
-          renderExplanation(result.text);
-          renderThemes(result.themes || []);
-          renderDevices(result.devices || []);
-          return;
-        }
-        renderError(result?.error || "Unable to analyze passage.");
-      });
+        try {
+        const result = await window.main.analyzePassage({ bookTitle, passage });
 
+        if (result?.ok) {
+          // Render main explanation
+          renderExplanation(result.text);
+
+          // Use fallback for themes if empty
+          const themes = Array.isArray(result.themes) && result.themes.length
+            ? result.themes
+            : ["No major themes detected"];
+          renderThemes(themes);
+
+          // Use fallback for devices if empty
+          const devices = Array.isArray(result.devices) && result.devices.length
+            ? result.devices
+            : ["No literary devices detected"];
+          renderDevices(devices);
+
+          return;
+    }
+
+    // If result.ok is false, show error
+    renderError(result?.error || "Unable to analyze passage.");
+  } catch (err) {
+    // Catch unexpected errors
+    renderError("An unexpected error occurred: " + err.message);
+  }
+});
       window.main.onSelection((text) => {
         selectionBox.value = text;
         dot.classList.add("active");
