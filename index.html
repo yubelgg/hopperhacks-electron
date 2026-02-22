@@ -30,25 +30,11 @@
 
       .app-shell {
         height: 100%;
-        overflow-y: auto;
+        overflow: hidden;
         padding: 20px;
         display: flex;
         flex-direction: column;
         gap: 14px;
-        scroll-behavior: smooth;
-      }
-
-      .app-shell.has-analysis {
-        padding-bottom: 50vh;
-      }
-
-      .app-shell::-webkit-scrollbar {
-        width: 6px;
-      }
-
-      .app-shell::-webkit-scrollbar-thumb {
-        background: #58695f;
-        border-radius: 999px;
       }
 
       header {
@@ -57,7 +43,7 @@
 
       h1 {
         font-family: "Abril Fatface", serif;
-        font-size: 26px;
+        font-size: 34px;
         font-weight: 400;
         color: #f8f3e8;
         letter-spacing: 0.02em;
@@ -101,10 +87,11 @@
 
       .section-header {
         font-family: "Abril Fatface", serif;
-        font-size: 16px;
+        font-size: 19px;
         font-weight: 400;
         color: #f8f3e8;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
+        text-align: center;
       }
 
       label {
@@ -250,8 +237,8 @@
       }
 
       .explanation-box {
-        min-height: 175px;
-        max-height: 240px;
+        flex: 1;
+        max-height: 180px;
         background: #252b25;
         border: 1px solid #495648;
         border-radius: 8px;
@@ -264,23 +251,31 @@
 
       .analysis-grid {
         display: grid;
-        grid-template-columns: 1.5fr 1fr;
-        gap: 12px;
+        grid-template-columns: 1.8fr 1fr;
+        gap: 14px;
+        align-items: stretch;
       }
 
       .device-box {
-        min-height: 175px;
-        max-height: 240px;
+        flex: 1;
+        max-height: 180px;
         background: #252b25;
         border: 1px solid #495648;
         border-radius: 8px;
         padding: 12px;
         overflow-y: auto;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+      }
+
+      .device-box::-webkit-scrollbar {
+        display: none;
       }
 
       .theme-bubbles {
         display: flex;
         flex-wrap: wrap;
+        justify-content: center;
         gap: 10px;
         padding: 4px 0;
       }
@@ -298,9 +293,9 @@
         font-size: 12px;
         line-height: 1.2;
         white-space: nowrap;
-        cursor: default;
+        cursor: pointer;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
       }
 
       .theme-bubble:hover {
@@ -311,11 +306,10 @@
       }
 
       .theme-tooltip {
-        display: none;
         position: absolute;
         top: calc(100% + 10px);
         left: 50%;
-        transform: translateX(-50%);
+        transform: translateX(-50%) translateY(4px);
         padding: 8px 12px;
         background: #1a1f1a;
         border: 1px solid #5a675d;
@@ -330,6 +324,8 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         z-index: 10;
         pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease, transform 0.3s ease;
       }
 
       .theme-tooltip::after {
@@ -343,7 +339,8 @@
       }
 
       .theme-bubble:hover .theme-tooltip {
-        display: block;
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
       }
 
       .device-list {
@@ -380,9 +377,13 @@
         font-style: italic;
       }
 
+      .characters-column {
+        display: flex;
+        flex-direction: column;
+      }
+
       .character-box {
-        min-height: 175px;
-        max-height: 240px;
+        height: 210px;
         background: #252b25;
         border: 1px solid #495648;
         border-radius: 8px;
@@ -390,38 +391,80 @@
         overflow-y: auto;
       }
 
+      .character-box::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      .character-box::-webkit-scrollbar-thumb {
+        background: #58695f;
+        border-radius: 2px;
+      }
+
       .character-list {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        align-items: center;
+        gap: 6px;
       }
 
-      .character-card {
-        border: 1px solid #4c5e7a;
-        border-radius: 10px;
-        background: linear-gradient(140deg, #272f3d, #212833);
-        padding: 9px 10px;
+      .character-sep {
+        display: none;
       }
 
-      .character-name {
-        font-size: 12px;
-        font-weight: 700;
-        color: #dce4f6;
+      .character-chip {
+        display: inline;
+        background: none;
+        border: none;
+        font-family: "Abril Fatface", serif;
+        font-size: 15px;
+        font-weight: 400;
+        color: #f8f3e8;
         letter-spacing: 0.02em;
+        cursor: pointer;
+        transition: color 0.35s ease, text-shadow 0.35s ease;
       }
 
-      .character-role {
-        margin-top: 4px;
-        font-size: 12px;
-        line-height: 1.35;
+      .character-chip:hover {
         color: #c9d4e9;
       }
 
+      .character-chip.active {
+        color: #d6a45a;
+        text-shadow: 0 0 18px rgba(214, 164, 90, 0.3);
+        text-decoration: underline;
+        text-underline-offset: 4px;
+      }
+
+      .character-detail {
+        width: 100%;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(-6px);
+        transition: max-height 0.5s ease, opacity 0.4s ease, transform 0.4s ease, margin 0.4s ease;
+        margin: 0;
+      }
+
+      .character-detail.expanded {
+        max-height: 200px;
+        opacity: 1;
+        transform: translateY(0);
+        margin-top: 10px;
+      }
+
+      .character-role {
+        font-size: 12px;
+        line-height: 1.5;
+        color: #c8b79d;
+        text-align: center;
+      }
+
       .character-relationship {
-        margin-top: 5px;
+        margin-top: 4px;
         font-size: 11px;
-        color: #9fb4d4;
+        color: #8f978f;
         font-style: italic;
+        text-align: center;
       }
 
       .explanation-box::-webkit-scrollbar {
@@ -539,7 +582,7 @@
     <main class="app-shell" id="appShell">
       <header>
         <h1><span class="status-dot" id="dot"></span>understory</h1>
-        <p class="subtitle">Start a reading session, then highlight text to get grounded explanations.</p>
+        <p class="subtitle">Feel confident reading any book.</p>
       </header>
 
       <section class="panel session-panel" id="sessionPanel">
@@ -604,9 +647,9 @@
             </div>
           </div>
 
-          <div class="panel section characters-panel" id="charactersPanel">
-            <h3 class="section-header">character analysis</h3>
-            <div class="character-box" id="characterBox">
+          <div class="panel section characters-column" id="charactersPanel">
+            <h3 class="section-header">characters</h3>
+            <div class="character-box">
               <div class="character-list" id="characterList"></div>
             </div>
           </div>
@@ -780,48 +823,63 @@
           return;
         }
 
-        characters.forEach((char, i) => {
-          if (typeof char === "string") {
-            const fallbackCard = document.createElement("div");
-            fallbackCard.className = "character-card fade-in";
-            fallbackCard.style.animationDelay = `${i * 0.1}s`;
-            const fallbackName = document.createElement("div");
-            fallbackName.className = "character-name";
-            fallbackName.textContent = char;
-            fallbackCard.appendChild(fallbackName);
-            characterList.appendChild(fallbackCard);
-            return;
-          }
+        const detail = document.createElement("div");
+        detail.className = "character-detail";
+        let activeChip = null;
 
-          if (!char || typeof char !== "object") return;
-          const name = typeof char.name === "string" ? char.name.trim() : "";
-          if (!name) return;
-
-          const card = document.createElement("div");
-          card.className = "character-card fade-in";
-          card.style.animationDelay = `${i * 0.1}s`;
-
-          const nameEl = document.createElement("div");
-          nameEl.className = "character-name";
-          nameEl.textContent = name;
-          card.appendChild(nameEl);
-
-          if (typeof char.role === "string" && char.role.trim()) {
-            const roleEl = document.createElement("div");
-            roleEl.className = "character-role";
-            roleEl.textContent = char.role.trim();
-            card.appendChild(roleEl);
-          }
-
-          if (typeof char.relationship === "string" && char.relationship.trim()) {
-            const relEl = document.createElement("div");
-            relEl.className = "character-relationship";
-            relEl.textContent = char.relationship.trim();
-            card.appendChild(relEl);
-          }
-
-          characterList.appendChild(card);
+        const validChars = characters.filter((c) => {
+          const n = typeof c === "string" ? c.trim() : (c?.name?.trim() || "");
+          return n.length > 0;
         });
+
+        validChars.forEach((char, i) => {
+          const name = typeof char === "string" ? char.trim() : (char?.name?.trim() || "");
+          const role = typeof char === "object" && typeof char.role === "string" ? char.role.trim() : "";
+          const relationship = typeof char === "object" && typeof char.relationship === "string" ? char.relationship.trim() : "";
+
+          if (i > 0) {
+            const sep = document.createElement("span");
+            sep.className = "character-sep";
+            sep.textContent = "/";
+            characterList.appendChild(sep);
+          }
+
+          const chip = document.createElement("span");
+          chip.className = "character-chip fade-in";
+          chip.style.animationDelay = `${i * 0.08}s`;
+          chip.textContent = name;
+
+          chip.addEventListener("click", () => {
+            if (activeChip === chip) {
+              chip.classList.remove("active");
+              detail.classList.remove("expanded");
+              activeChip = null;
+              return;
+            }
+            if (activeChip) activeChip.classList.remove("active");
+            activeChip = chip;
+            chip.classList.add("active");
+
+            detail.innerHTML = "";
+            if (role) {
+              const roleEl = document.createElement("div");
+              roleEl.className = "character-role";
+              roleEl.textContent = role;
+              detail.appendChild(roleEl);
+            }
+            if (relationship) {
+              const relEl = document.createElement("div");
+              relEl.className = "character-relationship";
+              relEl.textContent = relationship;
+              detail.appendChild(relEl);
+            }
+            detail.classList.add("expanded");
+          });
+
+          characterList.appendChild(chip);
+        });
+
+        characterList.appendChild(detail);
       }
 
       function renderError(msg) {
