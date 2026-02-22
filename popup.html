@@ -116,6 +116,29 @@
         color: #f2a392;
         display: none;
       }
+
+      .footer {
+        display: flex;
+        justify-content: center;
+        padding: 6px 12px 10px;
+        border-top: 1px solid #3b473d;
+        flex-shrink: 0;
+      }
+
+      .open-app-btn {
+        background: linear-gradient(140deg, #3a463d, #304339);
+        border: 1px solid #4e5f4f;
+        color: #c8b79d;
+        font-size: 11px;
+        padding: 5px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+      .open-app-btn:hover {
+        background: linear-gradient(140deg, #4a5a4d, #3a5345);
+        color: #f4efe6;
+      }
     </style>
   </head>
   <body>
@@ -146,6 +169,9 @@
       <div class="explanation" id="explanation"></div>
       <div class="error" id="error"></div>
     </div>
+    <div class="footer">
+      <button class="open-app-btn" id="openAppBtn">Open in Understory</button>
+    </div>
 
     <script>
       const snippetEl = document.getElementById("snippet");
@@ -155,6 +181,10 @@
 
       document.getElementById("closeBtn").addEventListener("click", () => {
         window.popup.close();
+      });
+
+      document.getElementById("openAppBtn").addEventListener("click", () => {
+        window.popup.openApp();
       });
 
       window.popup.onLoading((snippet) => {

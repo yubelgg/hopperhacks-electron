@@ -219,7 +219,6 @@ async function triggerExplain(text) {
     if (replacingPopup) {
       replacingPopup = false;
     } else {
-      lastSelection = "";
       clearTimeout(debounceTimer);
     }
   });
@@ -250,6 +249,14 @@ async function triggerExplain(text) {
 }
 
 ipcMain.on("close-popup", () => {
+  if (popupWindow && !popupWindow.isDestroyed()) popupWindow.close();
+});
+
+ipcMain.on("open-app", () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    mainWindow.focus();
+  }
   if (popupWindow && !popupWindow.isDestroyed()) popupWindow.close();
 });
 
