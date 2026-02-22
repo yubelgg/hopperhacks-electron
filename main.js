@@ -90,9 +90,7 @@ Passage:
           if (!item || typeof item !== "object") return null;
           const name = typeof item.name === "string" ? item.name.trim() : "";
           const explanation =
-            typeof item.explanation === "string"
-              ? item.explanation.trim()
-              : "";
+            typeof item.explanation === "string" ? item.explanation.trim() : "";
           const evidence =
             typeof item.evidence === "string" ? item.evidence.trim() : "";
           if (!name) return null;
@@ -131,23 +129,6 @@ function createMainWindow() {
     mainWindow = null;
   });
 }
-
-// Poll X11 PRIMARY selection every 300ms.
-// On Linux with X11/XWayland (Electron's default), highlighting text
-// automatically populates the primary selection — no Ctrl+C needed.
-setInterval(() => {
-  let sel = "";
-  try {
-    sel = clipboard.readText("selection").trim();
-  } catch {}
-  if (sel && sel !== lastSelection && sel.length >= 5) {
-    lastSelection = sel;
-    if (mainWindow && !mainWindow.isDestroyed())
-      mainWindow.webContents.send("selection", sel);
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => triggerExplain(sel), 600);
-  }
-}, 300);
 
 async function triggerExplain(text) {
   const cursor = screen.getCursorScreenPoint();
@@ -234,11 +215,24 @@ ipcMain.handle("analyze-passage", async (_event, payload) => {
 });
 
 app.whenReady().then(() => {
-  // Seed lastSelection so the poller doesn't fire on pre-existing clipboard content
-  try {
-    lastSelection = clipboard.readText("selection").trim();
-  } catch {}
   createMainWindow();
+
+  if (process.platform !== "linux") {
+    lastSelection = clipboard.readText().trim();
+    setInterval(() => {
+      let sel = "";
+      try {
+        sel = clipboard.readText().trim();
+      } catch {}
+      if (sel && sel !== lastSelection && sel.length >= 5) {
+        lastSelection = sel;
+        if (mainWindow && !mainWindow.isDestroyed())
+          mainWindow.webContents.send("selection", sel);
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => triggerExplain(sel), 600);
+      }
+    }, 300);
+  }
 });
 
 app.on("window-all-closed", () => {
