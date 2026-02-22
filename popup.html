@@ -50,7 +50,7 @@
         padding-top: 1px;
       }
 
-      .close-btn {
+      .close-btn, .speak-btn {
         background: none;
         border: none;
         color: #6c7563;
@@ -60,8 +60,15 @@
         padding: 0 2px;
         flex-shrink: 0;
       }
-      .close-btn:hover {
+      .close-btn:hover, .speak-btn:hover {
         color: #f4efe6;
+      }
+      .speak-btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .speak-btn.speaking {
+        color: #d6a45a;
       }
 
       .body {
@@ -144,6 +151,13 @@
   <body>
     <div class="header">
       <span class="snippet" id="snippet">…</span>
+      <button class="speak-btn" id="speakBtn" title="Read aloud" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>
+      </button>
       <button class="close-btn" id="closeBtn" title="Close">×</button>
     </div>
     <div class="body">
@@ -178,9 +192,42 @@
       const spinnerEl = document.getElementById("spinner");
       const explanationEl = document.getElementById("explanation");
       const errorEl = document.getElementById("error");
+      const speakBtn = document.getElementById("speakBtn");
 
       document.getElementById("closeBtn").addEventListener("click", () => {
         window.popup.close();
+      });
+
+      let currentAudio = null;
+
+      function stopAudio() {
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio = null;
+        }
+        speakBtn.classList.remove("speaking");
+        speakBtn.disabled = false;
+      }
+
+      speakBtn.addEventListener("click", async () => {
+        if (currentAudio) {
+          stopAudio();
+          return;
+        }
+        const text = explanationEl.textContent;
+        if (!text) return;
+        speakBtn.disabled = true;
+        try {
+          const base64 = await window.popup.speak(text);
+          currentAudio = new Audio("data:audio/mp3;base64," + base64);
+          currentAudio.onended = stopAudio;
+          currentAudio.onerror = stopAudio;
+          speakBtn.classList.add("speaking");
+          speakBtn.disabled = false;
+          currentAudio.play();
+        } catch {
+          stopAudio();
+        }
       });
 
       document.getElementById("openAppBtn").addEventListener("click", () => {
@@ -198,6 +245,7 @@
         spinnerEl.style.display = "none";
         explanationEl.style.display = "block";
         explanationEl.textContent = text;
+        speakBtn.style.display = "inline-flex";
       });
 
       window.popup.onError((msg) => {

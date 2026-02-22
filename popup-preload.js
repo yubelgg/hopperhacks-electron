@@ -6,5 +6,6 @@ contextBridge.exposeInMainWorld('popup', {
   onError:       (cb) => ipcRenderer.on('error',       (_, t) => cb(t)),
   close:         ()   => ipcRenderer.send('close-popup'),
   openApp:       ()   => ipcRenderer.send('open-app'),
+  speak:         (text) => ipcRenderer.invoke('speak-text', text),
 });
 

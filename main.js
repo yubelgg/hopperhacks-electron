@@ -1,9 +1,11 @@
 const path = require("path");
 const { app, BrowserWindow, clipboard, screen, ipcMain } = require("electron");
 const { GoogleGenAI } = require("@google/genai");
+const { ElevenLabsClient } = require("@elevenlabs/elevenlabs-js");
 require("dotenv").config();
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
 
 let mainWindow = null;
 let popupWindow = null;
@@ -260,6 +262,16 @@ ipcMain.on("open-app", () => {
   if (popupWindow && !popupWindow.isDestroyed()) popupWindow.close();
 });
 
+ipcMain.handle("speak-text", async (_event, text) => {
+  const stream = await elevenlabs.textToSpeech.convert(
+    "JBFqnCBsd6RMkjVDRZzb",
+    { text, modelId: "eleven_multilingual_v2", outputFormat: "mp3_44100_128" }
+  );
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  return Buffer.concat(chunks).toString("base64");
+});
+
 ipcMain.handle("analyze-passage", async (_event, payload) => {
   const bookTitle = payload?.bookTitle?.trim() || "";
   const passage = payload?.passage?.trim() || "";
@@ -285,22 +297,20 @@ ipcMain.handle("analyze-passage", async (_event, payload) => {
 app.whenReady().then(() => {
   createMainWindow();
 
-  if (process.platform !== "linux") {
-    lastSelection = clipboard.readText().trim();
-    setInterval(() => {
-      let sel = "";
-      try {
-        sel = clipboard.readText().trim();
-      } catch {}
-      if (sel && sel !== lastSelection && sel.length >= 5) {
-        lastSelection = sel;
-        if (mainWindow && !mainWindow.isDestroyed())
-          mainWindow.webContents.send("selection", sel);
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => triggerExplain(sel), 600);
-      }
-    }, 300);
-  }
+  lastSelection = clipboard.readText().trim();
+  setInterval(() => {
+    let sel = "";
+    try {
+      sel = clipboard.readText().trim();
+    } catch {}
+    if (sel && sel !== lastSelection && sel.length >= 5) {
+      lastSelection = sel;
+      if (mainWindow && !mainWindow.isDestroyed())
+        mainWindow.webContents.send("selection", sel);
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => triggerExplain(sel), 600);
+    }
+  }, 300);
 });
 
 app.on("window-all-closed", () => {
