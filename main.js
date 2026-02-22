@@ -41,7 +41,9 @@ async function generateSessionAnalysis(bookTitle, passage) {
 Return ONLY valid JSON in this shape:
 {
   "explanation": "2-3 clear sentences explaining the passage",
-  "themes": ["theme 1", "theme 2", "theme 3", "theme 4"],
+  "themes": [
+    { "name": "theme name", "description": "one sentence about how this theme appears" }
+  ],
   "devices": [
     {
       "name": "device name",
@@ -52,7 +54,8 @@ Return ONLY valid JSON in this shape:
 }
 Rules:
 - themes should reflect the book as a whole, not just one sentence from the passage
-- each theme should be 1-4 words
+- each theme name should be 1-4 words
+- each theme description should be 1 concise sentence
 - return 4 to 7 themes
 - devices should be literary devices present in this passage
 - return 3 to 5 devices
@@ -75,8 +78,22 @@ Passage:
       : raw;
   const themes = Array.isArray(parsed.themes)
     ? parsed.themes
-        .filter((item) => typeof item === "string" && item.trim())
-        .map((item) => item.trim())
+        .map((item) => {
+          if (typeof item === "string") {
+            const name = item.trim();
+            if (!name) return null;
+            return { name, description: "" };
+          }
+          if (!item || typeof item !== "object") return null;
+          const name = typeof item.name === "string" ? item.name.trim() : "";
+          const description =
+            typeof item.description === "string"
+              ? item.description.trim()
+              : "";
+          if (!name) return null;
+          return { name, description };
+        })
+        .filter(Boolean)
         .slice(0, 8)
     : [];
   const devices = Array.isArray(parsed.devices)

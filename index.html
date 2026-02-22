@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <title>Understory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&display=swap" rel="stylesheet" />
     <style>
       * {
         box-sizing: border-box;
@@ -48,9 +51,14 @@
         border-radius: 999px;
       }
 
+      header {
+        text-align: center;
+      }
+
       h1 {
-        font-size: 22px;
-        font-weight: 650;
+        font-family: "Abril Fatface", serif;
+        font-size: 26px;
+        font-weight: 400;
         color: #f8f3e8;
         letter-spacing: 0.02em;
       }
@@ -89,6 +97,14 @@
         letter-spacing: 0.08em;
         color: #c8b79d;
         margin-bottom: 10px;
+      }
+
+      .section-header {
+        font-family: "Abril Fatface", serif;
+        font-size: 16px;
+        font-weight: 400;
+        color: #f8f3e8;
+        margin-bottom: 8px;
       }
 
       label {
@@ -252,17 +268,6 @@
         gap: 12px;
       }
 
-      .insights-column {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .themes-panel {
-        min-height: 175px;
-      }
-
-      .theme-box,
       .device-box {
         min-height: 175px;
         max-height: 240px;
@@ -276,13 +281,16 @@
       .theme-bubbles {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 10px;
+        padding: 4px 0;
       }
 
-      .theme-chip {
+      .theme-bubble {
+        position: relative;
         display: inline-flex;
         align-items: center;
-        padding: 6px 10px;
+        justify-content: center;
+        padding: 10px 18px;
         border-radius: 999px;
         background: linear-gradient(140deg, #3a463d, #304339);
         border: 1px solid #5a675d;
@@ -290,6 +298,52 @@
         font-size: 12px;
         line-height: 1.2;
         white-space: nowrap;
+        cursor: default;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+
+      .theme-bubble:hover {
+        transform: scale(1.08);
+        box-shadow: 0 4px 14px rgba(90, 130, 100, 0.35);
+        background: linear-gradient(140deg, #475e4a, #3a5443);
+        border-color: #7a9a7e;
+      }
+
+      .theme-tooltip {
+        display: none;
+        position: absolute;
+        top: calc(100% + 10px);
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 8px 12px;
+        background: #1a1f1a;
+        border: 1px solid #5a675d;
+        border-radius: 8px;
+        color: #e8dcc8;
+        font-size: 11px;
+        line-height: 1.4;
+        white-space: normal;
+        width: max-content;
+        max-width: 220px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        z-index: 10;
+        pointer-events: none;
+      }
+
+      .theme-tooltip::after {
+        content: "";
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-bottom-color: #1a1f1a;
+      }
+
+      .theme-bubble:hover .theme-tooltip {
+        display: block;
       }
 
       .device-list {
@@ -335,27 +389,74 @@
         border-radius: 2px;
       }
 
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .fade-in {
+        animation: fadeInUp 0.4s ease forwards;
+        opacity: 0;
+      }
+
       .placeholder-text {
         color: #8f978f;
         font-style: italic;
       }
 
-      .spinner {
-        display: none;
-        align-items: center;
-        gap: 8px;
-        color: #d6cab6;
-        font-size: 12px;
-        font-style: italic;
-        margin-bottom: 8px;
-      }
-
-      .spinner.visible {
+      .loading-screen {
         display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 60px 20px;
+        opacity: 1;
+        transition: opacity 0.4s ease;
       }
 
-      .spinner svg {
+      .loading-screen.hidden {
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+      }
+
+      .loading-circle {
         animation: spin 1s linear infinite;
+      }
+
+      .loading-text {
+        font-family: "Abril Fatface", serif;
+        font-size: 15px;
+        font-weight: 400;
+        color: #c8b79d;
+        letter-spacing: 0.02em;
+      }
+
+      .analysis-content {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        opacity: 0;
+        transform: translateY(14px);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+        pointer-events: none;
+        max-height: 0;
+        overflow: hidden;
+      }
+
+      .analysis-content.revealed {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+        max-height: 3000px;
+        overflow: visible;
       }
 
       @keyframes spin {
@@ -393,7 +494,7 @@
   <body>
     <main class="app-shell" id="appShell">
       <header>
-        <h1><span class="status-dot" id="dot"></span>Understory</h1>
+        <h1><span class="status-dot" id="dot"></span>understory</h1>
         <p class="subtitle">Start a reading session, then highlight text to get grounded explanations.</p>
       </header>
 
@@ -436,51 +537,32 @@
           ></textarea>
         </div>
 
-        <div class="analysis-grid">
-          <div class="panel section explanation-section" id="explanationPanel">
-            <label>Analysis</label>
-            <div class="spinner" id="spinner">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="#c8b79d"
-                  stroke-width="3"
-                  opacity="0.3"
-                />
-                <path
-                  d="M12 2a10 10 0 0 1 10 10"
-                  stroke="#d6a45a"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                />
-              </svg>
-              Asking Gemini...
-            </div>
-            <div class="explanation-box" id="explanationBox">
-              <span class="placeholder-text" id="placeholder">Explanation will appear here.</span>
-            </div>
-          </div>
+        <div class="loading-screen" id="loadingScreen">
+          <svg class="loading-circle" width="36" height="36" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="#3b473d" stroke-width="2.5" />
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#d6a45a" stroke-width="2.5" stroke-linecap="round" />
+          </svg>
+          <p class="loading-text">reading between the lines...</p>
+        </div>
 
-          <div class="insights-column">
-            <div class="panel section themes-panel" id="themesPanel">
-              <label>Book Themes</label>
-              <div class="theme-box" id="themeBox">
-                <div class="theme-bubbles" id="themeBubbles">
-                  <span class="placeholder-text" id="themePlaceholder">Themes will appear here.</span>
-                </div>
-              </div>
+        <div class="analysis-content" id="analysisContent">
+          <div class="analysis-grid">
+            <div class="panel section explanation-section" id="explanationPanel">
+              <h3 class="section-header">analysis summary</h3>
+              <div class="explanation-box" id="explanationBox"></div>
             </div>
 
             <div class="panel section devices-panel" id="devicesPanel">
-              <label>Literary Devices</label>
+              <h3 class="section-header">literary devices</h3>
               <div class="device-box" id="deviceBox">
-                <div class="device-list" id="deviceBubbles">
-                  <span class="placeholder-text" id="devicePlaceholder">Devices will appear here.</span>
-                </div>
+                <div class="device-list" id="deviceBubbles"></div>
               </div>
             </div>
+          </div>
+
+          <div>
+            <h3 class="section-header">themes</h3>
+            <div class="theme-bubbles" id="themeBubbles"></div>
           </div>
         </div>
       </section>
@@ -495,10 +577,10 @@
 
       const selectionBox = document.getElementById("selectionBox");
       const explanationBox = document.getElementById("explanationBox");
-      const placeholder = document.getElementById("placeholder");
       const themeBubbles = document.getElementById("themeBubbles");
       const deviceBubbles = document.getElementById("deviceBubbles");
-      const spinner = document.getElementById("spinner");
+      const loadingScreen = document.getElementById("loadingScreen");
+      const analysisContent = document.getElementById("analysisContent");
       const dot = document.getElementById("dot");
 
       let sessionStarted = false;
@@ -525,20 +607,28 @@
       }
 
       function clearExplanationNodes() {
-        [...explanationBox.childNodes].forEach((node) => {
-          if (node !== placeholder) node.remove?.();
-        });
+        [...explanationBox.childNodes].forEach((node) => node.remove?.());
+      }
+
+      function showLoading() {
+        loadingScreen.classList.remove("hidden");
+        analysisContent.classList.remove("revealed");
+      }
+
+      function showContent() {
+        loadingScreen.classList.add("hidden");
+        analysisContent.classList.add("revealed");
       }
 
       function renderExplanation(text) {
-        spinner.classList.remove("visible");
-        placeholder.style.display = "none";
         clearExplanationNodes();
 
         const output = document.createElement("span");
+        output.className = "fade-in";
         output.textContent = text;
         explanationBox.appendChild(output);
         dot.classList.remove("active");
+        showContent();
       }
 
       function renderThemes(themes) {
@@ -551,20 +641,27 @@
           return;
         }
 
-        themes.forEach((theme) => {
-          const chip = document.createElement("span");
-          chip.className = "theme-chip";
-          chip.textContent = theme;
-          themeBubbles.appendChild(chip);
-        });
-      }
+        themes.forEach((theme, i) => {
+          const name = typeof theme === "string" ? theme : theme.name;
+          const description =
+            typeof theme === "object" && theme.description
+              ? theme.description
+              : "";
 
-      function renderThemeLoading() {
-        [...themeBubbles.childNodes].forEach((node) => node.remove?.());
-        const loadingText = document.createElement("span");
-        loadingText.className = "placeholder-text";
-        loadingText.textContent = "Generating themes...";
-        themeBubbles.appendChild(loadingText);
+          const bubble = document.createElement("span");
+          bubble.className = "theme-bubble fade-in";
+          bubble.style.animationDelay = `${i * 0.08}s`;
+          bubble.textContent = name;
+
+          if (description) {
+            const tooltip = document.createElement("span");
+            tooltip.className = "theme-tooltip";
+            tooltip.textContent = description;
+            bubble.appendChild(tooltip);
+          }
+
+          themeBubbles.appendChild(bubble);
+        });
       }
 
       function renderDevices(devices) {
@@ -577,10 +674,11 @@
           return;
         }
 
-        devices.forEach((device) => {
+        devices.forEach((device, i) => {
           if (typeof device === "string") {
             const fallbackCard = document.createElement("div");
-            fallbackCard.className = "device-card";
+            fallbackCard.className = "device-card fade-in";
+            fallbackCard.style.animationDelay = `${i * 0.1}s`;
             const fallbackName = document.createElement("div");
             fallbackName.className = "device-name";
             fallbackName.textContent = device;
@@ -594,7 +692,8 @@
           if (!name) return;
 
           const card = document.createElement("div");
-          card.className = "device-card";
+          card.className = "device-card fade-in";
+          card.style.animationDelay = `${i * 0.1}s`;
 
           const nameEl = document.createElement("div");
           nameEl.className = "device-name";
@@ -619,17 +718,7 @@
         });
       }
 
-      function renderDeviceLoading() {
-        [...deviceBubbles.childNodes].forEach((node) => node.remove?.());
-        const loadingText = document.createElement("span");
-        loadingText.className = "placeholder-text";
-        loadingText.textContent = "Detecting literary devices...";
-        deviceBubbles.appendChild(loadingText);
-      }
-
       function renderError(msg) {
-        spinner.classList.remove("visible");
-        placeholder.style.display = "none";
         clearExplanationNodes();
         renderThemes([]);
         renderDevices([]);
@@ -639,6 +728,7 @@
         error.textContent = msg;
         explanationBox.appendChild(error);
         dot.classList.remove("active");
+        showContent();
       }
 
       sessionForm.addEventListener("submit", async (event) => {
@@ -651,11 +741,7 @@
 
         startSessionTransition();
         dot.classList.add("active");
-        spinner.classList.add("visible");
-        placeholder.style.display = "none";
-        clearExplanationNodes();
-        renderThemeLoading();
-        renderDeviceLoading();
+        showLoading();
 
         try {
           const result = await window.main.analyzePassage({ bookTitle, passage });
@@ -678,9 +764,7 @@
 
       window.main.onLoading(() => {
         startSessionTransition();
-        spinner.classList.add("visible");
-        placeholder.style.display = "none";
-        clearExplanationNodes();
+        showLoading();
       });
 
       window.main.onExplanation((text) => {
