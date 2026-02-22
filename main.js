@@ -297,20 +297,22 @@ ipcMain.handle("analyze-passage", async (_event, payload) => {
 app.whenReady().then(() => {
   createMainWindow();
 
-  lastSelection = clipboard.readText().trim();
-  setInterval(() => {
-    let sel = "";
-    try {
-      sel = clipboard.readText().trim();
-    } catch {}
-    if (sel && sel !== lastSelection && sel.length >= 5) {
-      lastSelection = sel;
-      if (mainWindow && !mainWindow.isDestroyed())
-        mainWindow.webContents.send("selection", sel);
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => triggerExplain(sel), 600);
-    }
-  }, 300);
+  setTimeout(() => {
+    lastSelection = clipboard.readText().trim();
+    setInterval(() => {
+      let sel = "";
+      try {
+        sel = clipboard.readText().trim();
+      } catch {}
+      if (sel && sel !== lastSelection && sel.length >= 5) {
+        lastSelection = sel;
+        if (mainWindow && !mainWindow.isDestroyed())
+          mainWindow.webContents.send("selection", sel);
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => triggerExplain(sel), 600);
+      }
+    }, 300);
+  }, 500);
 });
 
 app.on("window-all-closed", () => {
