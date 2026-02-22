@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>LitHelper</title>
+    <title>Understory</title>
     <style>
       * {
         box-sizing: border-box;
@@ -10,28 +10,85 @@
         padding: 0;
       }
 
+      :root {
+        color-scheme: dark;
+      }
+
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: #0f0f1a;
-        color: #e0e0f0;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top right, #3f5d4f 0%, transparent 45%),
+          radial-gradient(circle at bottom left, #5f3c2f 0%, transparent 40%),
+          #161a17;
+        color: #f4efe6;
         height: 100vh;
+        overflow: hidden;
+      }
+
+      .app-shell {
+        height: 100%;
+        overflow-y: auto;
+        padding: 20px;
         display: flex;
         flex-direction: column;
-        padding: 20px;
         gap: 14px;
+        scroll-behavior: smooth;
+      }
+
+      .app-shell.has-analysis {
+        padding-bottom: 50vh;
+      }
+
+      .app-shell::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .app-shell::-webkit-scrollbar-thumb {
+        background: #58695f;
+        border-radius: 999px;
       }
 
       h1 {
-        font-size: 18px;
-        font-weight: 600;
-        color: #c0c0e8;
+        font-size: 22px;
+        font-weight: 650;
+        color: #f8f3e8;
         letter-spacing: 0.02em;
       }
 
       .subtitle {
+        margin-top: 4px;
         font-size: 12px;
-        color: #555570;
-        margin-top: 2px;
+        color: #d6cab6;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #6c7563;
+        display: inline-block;
+        margin-right: 8px;
+        transition: background 0.3s;
+      }
+
+      .status-dot.active {
+        background: #d6a45a;
+        box-shadow: 0 0 7px #d6a45a66;
+      }
+
+      .panel {
+        background: #1f241f;
+        border: 1px solid #3b473d;
+        border-radius: 12px;
+        padding: 14px;
+      }
+
+      .panel-title {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #c8b79d;
+        margin-bottom: 10px;
       }
 
       label {
@@ -39,72 +96,247 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: #6060a0;
+        color: #c8b79d;
         margin-bottom: 6px;
         display: block;
       }
 
+      input,
       textarea {
         width: 100%;
-        flex: 1;
-        background: #16162a;
-        border: 1px solid #2a2a4a;
+        background: #252b25;
+        border: 1px solid #495648;
         border-radius: 8px;
-        color: #d0d0f0;
+        color: #f4efe6;
         font-size: 13px;
-        line-height: 1.6;
-        padding: 12px 14px;
-        resize: none;
+        line-height: 1.5;
+        padding: 10px 12px;
         outline: none;
         font-family: inherit;
-        transition: border-color 0.15s;
+        transition: border-color 0.2s;
       }
+
+      textarea {
+        resize: none;
+      }
+
+      input:focus,
       textarea:focus {
-        border-color: #4040a0;
+        border-color: #d6a45a;
       }
+
+      input::placeholder,
       textarea::placeholder {
-        color: #35355a;
+        color: #8f978f;
+      }
+
+      .session-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .session-cta {
+        margin-top: 4px;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(140deg, #d6a45a, #c47f52);
+        color: #191510;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 10px 12px;
+        cursor: pointer;
+      }
+
+      .session-panel {
+        max-height: 900px;
+        opacity: 1;
+        overflow: hidden;
+        transform-origin: top center;
+        transition:
+          max-height 0.7s ease,
+          opacity 0.5s ease,
+          transform 0.7s ease,
+          margin 0.5s ease,
+          padding 0.5s ease;
+      }
+
+      .session-panel.is-collapsed {
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+        margin-top: -6px;
+        margin-bottom: -6px;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-width: 0;
+      }
+
+      .analysis-section {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(18px);
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        transition:
+          max-height 0.75s ease,
+          opacity 0.5s ease,
+          transform 0.65s ease;
+      }
+
+      .analysis-section.is-visible {
+        max-height: 2000px;
+        overflow: visible;
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
       }
 
       .section {
         display: flex;
         flex-direction: column;
+      }
+
+      .selection-section {
+        min-height: 150px;
+        max-height: 260px;
+        opacity: 1;
+        overflow: hidden;
+        transition:
+          max-height 0.55s ease,
+          opacity 0.4s ease,
+          transform 0.55s ease,
+          margin 0.4s ease,
+          padding 0.4s ease,
+          border-width 0.4s ease;
+      }
+
+      .selection-section textarea {
+        min-height: 95px;
+      }
+
+      .selection-section.is-collapsed {
         min-height: 0;
-      }
-
-      .section.selection-section {
-        flex: 0 0 160px;
-      }
-
-      .section.explanation-section {
-        flex: 1;
+        max-height: 0;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(-8px);
+        margin: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-width: 0;
       }
 
       .explanation-box {
-        flex: 1;
-        background: #16162a;
-        border: 1px solid #2a2a4a;
+        min-height: 175px;
+        max-height: 240px;
+        background: #252b25;
+        border: 1px solid #495648;
         border-radius: 8px;
-        padding: 12px 14px;
+        padding: 12px;
         font-size: 13px;
         line-height: 1.6;
-        color: #d0d0f0;
+        color: #f4efe6;
         overflow-y: auto;
-        min-height: 0;
       }
+
+      .analysis-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 12px;
+      }
+
+      .insights-column {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .themes-panel {
+        min-height: 175px;
+      }
+
+      .theme-box,
+      .device-box {
+        min-height: 175px;
+        max-height: 240px;
+        background: #252b25;
+        border: 1px solid #495648;
+        border-radius: 8px;
+        padding: 12px;
+        overflow-y: auto;
+      }
+
+      .theme-bubbles {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .theme-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: linear-gradient(140deg, #3a463d, #304339);
+        border: 1px solid #5a675d;
+        color: #f2eadb;
+        font-size: 12px;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+
+      .device-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .device-card {
+        border: 1px solid #7a5e4c;
+        border-radius: 10px;
+        background: linear-gradient(140deg, #3d2f27, #332821);
+        padding: 9px 10px;
+      }
+
+      .device-name {
+        font-size: 12px;
+        font-weight: 700;
+        color: #f6e8dc;
+        letter-spacing: 0.02em;
+      }
+
+      .device-explanation {
+        margin-top: 4px;
+        font-size: 12px;
+        line-height: 1.35;
+        color: #e9d7c9;
+      }
+
+      .device-evidence {
+        margin-top: 5px;
+        font-size: 11px;
+        color: #d4b69f;
+        font-style: italic;
+      }
+
       .explanation-box::-webkit-scrollbar {
         width: 4px;
       }
-      .explanation-box::-webkit-scrollbar-track {
-        background: transparent;
-      }
+
       .explanation-box::-webkit-scrollbar-thumb {
-        background: #333;
+        background: #58695f;
         border-radius: 2px;
       }
 
       .placeholder-text {
-        color: #35355a;
+        color: #8f978f;
         font-style: italic;
       }
 
@@ -112,17 +344,20 @@
         display: none;
         align-items: center;
         gap: 8px;
-        color: #5050a0;
+        color: #d6cab6;
         font-size: 12px;
         font-style: italic;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
       }
+
       .spinner.visible {
         display: flex;
       }
+
       .spinner svg {
         animation: spin 1s linear infinite;
       }
+
       @keyframes spin {
         to {
           transform: rotate(360deg);
@@ -130,74 +365,310 @@
       }
 
       .error-text {
-        color: #f08080;
+        color: #f2a392;
         font-size: 12px;
       }
 
-      .status-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: #3a3a6a;
-        display: inline-block;
-        margin-right: 6px;
-        transition: background 0.3s;
+      @media (prefers-reduced-motion: reduce) {
+        .app-shell {
+          scroll-behavior: auto;
+        }
+
+        .session-panel,
+        .analysis-section,
+        .analysis-section.is-visible {
+          transition: none;
+          animation: none;
+          transform: none;
+        }
       }
-      .status-dot.active {
-        background: #6060cc;
-        box-shadow: 0 0 6px #6060cc88;
+
+      @media (max-width: 760px) {
+        .analysis-grid {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
   <body>
-    <div>
-      <h1><span class="status-dot" id="dot"></span>LitHelper</h1>
-      <p class="subtitle">Highlight any text to explain it</p>
-    </div>
+    <main class="app-shell" id="appShell">
+      <header>
+        <h1><span class="status-dot" id="dot"></span>Understory</h1>
+        <p class="subtitle">Start a reading session, then highlight text to get grounded explanations.</p>
+      </header>
 
-    <div class="section selection-section">
-      <label>Selected Text</label>
-      <textarea
-        id="selectionBox"
-        placeholder="Highlight text anywhere on your screen…"
-        readonly
-      ></textarea>
-    </div>
+      <section class="panel session-panel" id="sessionPanel">
+        <h2 class="panel-title">Reading Session</h2>
+        <form class="session-form" id="sessionForm" novalidate>
+          <div>
+            <label for="bookTitle">Book Name</label>
+            <input
+              id="bookTitle"
+              name="bookTitle"
+              type="text"
+              placeholder="e.g. The Left Hand of Darkness"
+              required
+            />
+          </div>
 
-    <div class="section explanation-section">
-      <label>Explanation</label>
-      <div class="spinner" id="spinner">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="#3030a0"
-            stroke-width="3"
-            opacity="0.3"
-          />
-          <path
-            d="M12 2a10 10 0 0 1 10 10"
-            stroke="#7070cc"
-            stroke-width="3"
-            stroke-linecap="round"
-          />
-        </svg>
-        Asking Gemini…
-      </div>
-      <div class="explanation-box" id="explanationBox">
-        <span class="placeholder-text" id="placeholder"
-          >Explanation will appear here.</span
-        >
-      </div>
-    </div>
+          <div>
+            <label for="sessionPassage">Passage</label>
+            <textarea
+              id="sessionPassage"
+              name="sessionPassage"
+              rows="4"
+              placeholder="Paste the passage you want to analyze."
+              required
+            ></textarea>
+          </div>
+
+          <button class="session-cta" type="submit">Begin Analysis</button>
+        </form>
+      </section>
+
+      <section class="analysis-section" id="analysisSection" aria-hidden="true">
+        <div class="panel section selection-section" id="selectionSection">
+          <label>Selected Text</label>
+          <textarea
+            id="selectionBox"
+            placeholder="Highlight text anywhere on your screen..."
+            readonly
+          ></textarea>
+        </div>
+
+        <div class="analysis-grid">
+          <div class="panel section explanation-section" id="explanationPanel">
+            <label>Analysis</label>
+            <div class="spinner" id="spinner">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="#c8b79d"
+                  stroke-width="3"
+                  opacity="0.3"
+                />
+                <path
+                  d="M12 2a10 10 0 0 1 10 10"
+                  stroke="#d6a45a"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                />
+              </svg>
+              Asking Gemini...
+            </div>
+            <div class="explanation-box" id="explanationBox">
+              <span class="placeholder-text" id="placeholder">Explanation will appear here.</span>
+            </div>
+          </div>
+
+          <div class="insights-column">
+            <div class="panel section themes-panel" id="themesPanel">
+              <label>Book Themes</label>
+              <div class="theme-box" id="themeBox">
+                <div class="theme-bubbles" id="themeBubbles">
+                  <span class="placeholder-text" id="themePlaceholder">Themes will appear here.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel section devices-panel" id="devicesPanel">
+              <label>Literary Devices</label>
+              <div class="device-box" id="deviceBox">
+                <div class="device-list" id="deviceBubbles">
+                  <span class="placeholder-text" id="devicePlaceholder">Devices will appear here.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
 
     <script>
+      const sessionPanel = document.getElementById("sessionPanel");
+      const sessionForm = document.getElementById("sessionForm");
+      const analysisSection = document.getElementById("analysisSection");
+      const selectionSection = document.getElementById("selectionSection");
+      const explanationPanel = document.getElementById("explanationPanel");
+
       const selectionBox = document.getElementById("selectionBox");
       const explanationBox = document.getElementById("explanationBox");
       const placeholder = document.getElementById("placeholder");
+      const themeBubbles = document.getElementById("themeBubbles");
+      const deviceBubbles = document.getElementById("deviceBubbles");
       const spinner = document.getElementById("spinner");
       const dot = document.getElementById("dot");
+
+      let sessionStarted = false;
+
+      function scrollToAnalysis() {
+        explanationPanel.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+
+      function startSessionTransition() {
+        if (sessionStarted) return;
+        sessionStarted = true;
+
+        sessionPanel.classList.add("is-collapsed");
+        analysisSection.classList.add("is-visible");
+        selectionSection.classList.add("is-collapsed");
+        analysisSection.setAttribute("aria-hidden", "false");
+        document.getElementById("appShell").classList.add("has-analysis");
+
+        // Delay scroll until collapse animation starts, avoiding abrupt jumps.
+        window.setTimeout(scrollToAnalysis, 140);
+      }
+
+      function clearExplanationNodes() {
+        [...explanationBox.childNodes].forEach((node) => {
+          if (node !== placeholder) node.remove?.();
+        });
+      }
+
+      function renderExplanation(text) {
+        spinner.classList.remove("visible");
+        placeholder.style.display = "none";
+        clearExplanationNodes();
+
+        const output = document.createElement("span");
+        output.textContent = text;
+        explanationBox.appendChild(output);
+        dot.classList.remove("active");
+      }
+
+      function renderThemes(themes) {
+        [...themeBubbles.childNodes].forEach((node) => node.remove?.());
+        if (!Array.isArray(themes) || themes.length === 0) {
+          const placeholderChip = document.createElement("span");
+          placeholderChip.className = "placeholder-text";
+          placeholderChip.textContent = "No themes generated yet.";
+          themeBubbles.appendChild(placeholderChip);
+          return;
+        }
+
+        themes.forEach((theme) => {
+          const chip = document.createElement("span");
+          chip.className = "theme-chip";
+          chip.textContent = theme;
+          themeBubbles.appendChild(chip);
+        });
+      }
+
+      function renderThemeLoading() {
+        [...themeBubbles.childNodes].forEach((node) => node.remove?.());
+        const loadingText = document.createElement("span");
+        loadingText.className = "placeholder-text";
+        loadingText.textContent = "Generating themes...";
+        themeBubbles.appendChild(loadingText);
+      }
+
+      function renderDevices(devices) {
+        [...deviceBubbles.childNodes].forEach((node) => node.remove?.());
+        if (!Array.isArray(devices) || devices.length === 0) {
+          const placeholderChip = document.createElement("span");
+          placeholderChip.className = "placeholder-text";
+          placeholderChip.textContent = "No devices generated yet.";
+          deviceBubbles.appendChild(placeholderChip);
+          return;
+        }
+
+        devices.forEach((device) => {
+          if (typeof device === "string") {
+            const fallbackCard = document.createElement("div");
+            fallbackCard.className = "device-card";
+            const fallbackName = document.createElement("div");
+            fallbackName.className = "device-name";
+            fallbackName.textContent = device;
+            fallbackCard.appendChild(fallbackName);
+            deviceBubbles.appendChild(fallbackCard);
+            return;
+          }
+
+          if (!device || typeof device !== "object") return;
+          const name = typeof device.name === "string" ? device.name.trim() : "";
+          if (!name) return;
+
+          const card = document.createElement("div");
+          card.className = "device-card";
+
+          const nameEl = document.createElement("div");
+          nameEl.className = "device-name";
+          nameEl.textContent = name;
+          card.appendChild(nameEl);
+
+          if (typeof device.explanation === "string" && device.explanation.trim()) {
+            const explanationEl = document.createElement("div");
+            explanationEl.className = "device-explanation";
+            explanationEl.textContent = device.explanation.trim();
+            card.appendChild(explanationEl);
+          }
+
+          if (typeof device.evidence === "string" && device.evidence.trim()) {
+            const evidenceEl = document.createElement("div");
+            evidenceEl.className = "device-evidence";
+            evidenceEl.textContent = `"${device.evidence.trim()}"`;
+            card.appendChild(evidenceEl);
+          }
+
+          deviceBubbles.appendChild(card);
+        });
+      }
+
+      function renderDeviceLoading() {
+        [...deviceBubbles.childNodes].forEach((node) => node.remove?.());
+        const loadingText = document.createElement("span");
+        loadingText.className = "placeholder-text";
+        loadingText.textContent = "Detecting literary devices...";
+        deviceBubbles.appendChild(loadingText);
+      }
+
+      function renderError(msg) {
+        spinner.classList.remove("visible");
+        placeholder.style.display = "none";
+        clearExplanationNodes();
+        renderThemes([]);
+        renderDevices([]);
+
+        const error = document.createElement("span");
+        error.className = "error-text";
+        error.textContent = msg;
+        explanationBox.appendChild(error);
+        dot.classList.remove("active");
+      }
+
+      sessionForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!sessionForm.reportValidity()) return;
+
+        const bookTitle = document.getElementById("bookTitle").value.trim();
+        const passage = document.getElementById("sessionPassage").value.trim();
+        if (!passage) return;
+
+        startSessionTransition();
+        dot.classList.add("active");
+        spinner.classList.add("visible");
+        placeholder.style.display = "none";
+        clearExplanationNodes();
+        renderThemeLoading();
+        renderDeviceLoading();
+
+        const result = await window.main.analyzePassage({
+          bookTitle,
+          passage,
+        });
+        if (result?.ok) {
+          renderExplanation(result.text);
+          renderThemes(result.themes || []);
+          renderDevices(result.devices || []);
+          return;
+        }
+        renderError(result?.error || "Unable to analyze passage.");
+      });
 
       window.main.onSelection((text) => {
         selectionBox.value = text;
@@ -205,42 +676,20 @@
       });
 
       window.main.onLoading(() => {
+        startSessionTransition();
         spinner.classList.add("visible");
         placeholder.style.display = "none";
-        explanationBox.childNodes.forEach((n) => {
-          if (n !== placeholder) n.remove?.();
-        });
+        clearExplanationNodes();
       });
 
       window.main.onExplanation((text) => {
-        spinner.classList.remove("visible");
-        placeholder.style.display = "none";
-
-        // Clear previous explanation text nodes
-        [...explanationBox.childNodes].forEach((n) => {
-          if (n !== placeholder) n.remove?.();
-        });
-
-        const p = document.createElement("span");
-        p.textContent = text;
-        explanationBox.appendChild(p);
-        dot.classList.remove("active");
+        renderExplanation(text);
       });
 
       window.main.onError((msg) => {
-        spinner.classList.remove("visible");
-        placeholder.style.display = "none";
-
-        [...explanationBox.childNodes].forEach((n) => {
-          if (n !== placeholder) n.remove?.();
-        });
-
-        const e = document.createElement("span");
-        e.className = "error-text";
-        e.textContent = msg;
-        explanationBox.appendChild(e);
-        dot.classList.remove("active");
+        renderError(msg);
       });
     </script>
   </body>
 </html>
+
