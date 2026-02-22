@@ -98,9 +98,7 @@ Passage:
           if (!item || typeof item !== "object") return null;
           const name = typeof item.name === "string" ? item.name.trim() : "";
           const description =
-            typeof item.description === "string"
-              ? item.description.trim()
-              : "";
+            typeof item.description === "string" ? item.description.trim() : "";
           if (!name) return null;
           return { name, description };
         })
@@ -138,8 +136,7 @@ Passage:
           }
           if (!item || typeof item !== "object") return null;
           const name = typeof item.name === "string" ? item.name.trim() : "";
-          const role =
-            typeof item.role === "string" ? item.role.trim() : "";
+          const role = typeof item.role === "string" ? item.role.trim() : "";
           const relationship =
             typeof item.relationship === "string"
               ? item.relationship.trim()
@@ -250,11 +247,6 @@ async function triggerExplain(text) {
         mainWindow.webContents.send("error", "Error: " + err.message);
     }
   });
-
-  // Auto-close after 15 seconds
-  setTimeout(() => {
-    if (popupWindow && !popupWindow.isDestroyed()) popupWindow.close();
-  }, 15000);
 }
 
 ipcMain.on("close-popup", () => {
